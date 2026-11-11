@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#10131d">
+  <title>Serafim Transmissões</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/"><span class="brand-mark">S</span><span>SERAFIM <b>TRANSMISSÕES</b></span></a>
+    <span class="online"><i></i> Plataforma online</span>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <div class="eyebrow">JOGUE JUNTO, MESMO DE LONGE</div>
+      <h1>Seu jogo.<br><span>Sua transmissão.</span></h1>
+      <p>Compartilhe sua tela com seus amigos em poucos segundos.</p>
+    </section>
+
+    <section class="panel" id="homePanel">
+      <div class="tabs">
+        <button class="tab active" id="hostTab">Transmitir</button>
+        <button class="tab" id="joinTab">Assistir</button>
+      </div>
+      <div id="hostForm" class="form-area">
+        <div class="feature-icon">▣</div>
+        <h2>Começar transmissão</h2>
+        <p>Crie uma sala e compartilhe o código com seus amigos.</p>
+        <button class="primary" id="createBtn">Criar minha transmissão <span>→</span></button>
+      </div>
+      <div id="joinForm" class="form-area hidden">
+        <div class="feature-icon">▷</div>
+        <h2>Assistir transmissão</h2>
+        <p>Digite o código que seu amigo compartilhou.</p>
+        <input id="roomInput" maxlength="6" placeholder="CÓDIGO DA SALA" autocomplete="off">
+        <button class="primary" id="joinBtn">Entrar na transmissão <span>→</span></button>
+      </div>
+      <div class="privacy">Conexão em tempo real • Até 8 espectadores por sala</div>
+    </section>
+
+    <section class="stage hidden" id="stage">
+      <div class="stage-head">
+        <div><span class="live-dot"></span><strong id="stageTitle">Transmissão</strong><small id="roomLabel"></small></div>
+        <div class="viewer-count">● <span id="viewerCount">1</span> na sala</div>
+      </div>
+      <div class="video-wrap" id="videoWrap">
+        <video id="remoteVideo" autoplay playsinline></video>
+        <div class="video-placeholder" id="placeholder">
+          <div class="spinner"></div>
+          <strong id="videoStatus">Aguardando imagem...</strong>
+          <p id="videoHint">A transmissão aparecerá aqui assim que o anfitrião compartilhar a tela.</p>
+        </div>
+        <div class="video-error hidden" id="videoError">
+          <strong>Não estamos recebendo imagem.</strong>
+          <p>Peça ao anfitrião para interromper e iniciar o compartilhamento novamente.</p>
+        </div>
+      </div>
+      <div class="stage-actions">
+        <button class="secondary" id="copyBtn">Copiar código</button>
+        <button class="danger" id="stopBtn">Sair da sala</button>
+      </div>
+      <p class="notice" id="notice">Mantenha esta aba aberta durante a transmissão.</p>
+    </section>
+
+    <section class="tips">
+      <div><b>01</b><span><strong>Crie uma sala</strong><small>Um clique para começar.</small></span></div>
+      <div><b>02</b><span><strong>Envie o código</strong><small>Convide seus amigos.</small></span></div>
+      <div><b>03</b><span><strong>Jogue e compartilhe</strong><small>Imagem em tempo real.</small></span></div>
+    </section>
+    <footer>Serafim Transmissões <span>•</span> Feito para jogar com os amigos</footer>
+  </main>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/app.js"></script>
+</body>
+</html>
