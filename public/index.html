@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Serafim Transmissões</title>
+<link rel="icon" href="logo.png">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:Inter,system-ui,Arial,sans-serif}
+body{background:#000;color:#fff;min-height:100vh}
+.app{max-width:1280px;margin:0 auto;background:#1a2f4d;min-height:100vh;padding:14px}
+header{background:#243a5e;border-radius:18px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;align-items:center;gap:14px}
+.brand img{width:56px;height:56px;border-radius:14px;object-fit:cover;background:#1a2f4d}
+.brand h1{font-size:28px;line-height:.95}
+.brand h1 span{display:block}
+.pills{display:flex;gap:8px;flex-wrap:wrap}
+.pill{background:#1a2f4d;padding:8px 12px;border-radius:999px;font-size:14px}
+.video-wrap{position:relative;margin:14px 0;background:#000;border-radius:16px;overflow:hidden;aspect-ratio:16/9}
+video{width:100%;height:100%;object-fit:contain;background:#000;display:block}
+.placeholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#cbd5e1;text-align:center;padding:20px}
+.placeholder b{font-size:22px;color:#fff}
+.badge-taxa{position:absolute;left:14px;bottom:14px;background:rgba(26,47,77,.9);padding:8px 12px;border-radius:999px;font-size:14px}
+.badge-live{position:absolute;right:14px;bottom:14px;background:#e11d48;padding:8px 14px;border-radius:12px;text-align:center}
+.badge-live b{display:block}
+.controls{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;background:#243a5e;padding:14px;border-radius:16px}
+button{border:0;cursor:pointer;background:#1a2f4d;color:#fff;padding:12px 16px;border-radius:12px;font-size:15px;min-width:110px}
+button.primary{background:#3b82f6}
+button.active{background:#e11d48}
+input{padding:12px;border-radius:10px;border:1px solid #334155;background:#0f172a;color:#fff;font-size:16px;text-transform:uppercase;text-align:center;width:150px}
+.panel{display:none;margin-top:12px;background:#243a5e;padding:14px;border-radius:14px;text-align:center}
+.panel.show{display:block}
+.code{font-size:32px;letter-spacing:6px;font-weight:800}
+small{color:#94a3b8}
+@media(max-width:640px){.brand h1{font-size:20px}button{min-width:90px;padding:10px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+<div class="brand"><img src="logo.png" alt="Serafim"><h1><span>Serafim</span><span>Transmissões</span></h1></div>
+<div class="pills"><span class="pill">👁 <span id="viewers">0</span> assistindo</span><span class="pill">📶 Ping <span id="ping">--</span>ms</span></div>
+</header>
+
+<div class="video-wrap">
+<video id="video" autoplay playsinline controls></video>
+<div class="placeholder" id="placeholder"><b>Serafim Transmissões</b><span id="status">Escolha Transmitir ou Assistir abaixo</span></div>
+<div class="badge-taxa">● TAXA <span id="res">768p</span> • <span id="fps">--</span> fps</div>
+<div class="badge-live" id="liveBadge" style="display:none"><b>LIVE</b><span>ao vivo • tela</span></div>
+</div>
+
+<div class="controls">
+<button id="btnHost" class="primary">📡<br>Transmitir</button>
+<button id="btnWatch">👁<br>Assistir</button>
+<button id="btnMute">🎤<br><span id="muteLabel">Mudo</span></button>
+<button id="btnFull">⛶<br>Cheia</button>
+<button id="btnShare">🔗<br>Compartilhar</button>
+</div>
+
+<div class="panel" id="hostPanel">Sua sala foi criada!<div class="code" id="roomCode">------</div><small>Mande esse código para seus amigos</small><br><br><button id="btnStop">Encerrar transmissão</button></div>
+<div class="panel" id="watchPanel"><p>Digite o código da sala</p><br><input id="codeInput" maxlength="6" placeholder="ABC123"><br><br><button id="btnJoin" class="primary">Entrar para assistir</button></div>
+<div class="panel" id="infoPanel"><span id="infoText"></span></div>
+</div>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const socket = io();
+const video = document.getElementById('video');
+const placeholder = document.getElementById('placeholder');
+const statusEl = document.getElementById('status');
+const liveBadge = document.getElementById('liveBadge');
+let pc=null, stream=null, room=null, isHost=false, muted=false;
+function showInfo(t){const p=document.getElementById('infoPanel');p.classList.add('show');document.getElementById('infoText').textContent=t;}
+function makeCode(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<6;i++)s+=c[Math.floor(Math.random()*c.length)];return s;}
+document.getElementById('btnHost').onclick=async()=>{
+  try{
+    stream = await navigator.mediaDevices.getDisplayMedia({video:{frameRate:30}, audio:true});
+    video.srcObject=stream; placeholder.style.display='none'; liveBadge.style.display='block';
+    room=makeCode(); isHost=true;
+    document.getElementById('roomCode').textContent=room;
+    document.getElementById('hostPanel').classList.add('show');
+    socket.emit('create-room', room);
+    statusEl.textContent='Você está transmitindo';
+    showInfo('Transmitindo! Código: '+room);
+  }catch(e){showInfo('Você cancelou o compartilhamento. Clique em Transmitir de novo.');}
+};
+document.getElementById('btnWatch').onclick=()=>{document.getElementById('watchPanel').classList.toggle('show');};
+document.getElementById('btnJoin').onclick=()=>{
+  room=document.getElementById('codeInput').value.trim().toUpperCase();
+  if(room.length!==6){showInfo('Digite o código de 6 caracteres');return;}
+  placeholder.style.display='none'; liveBadge.style.display='block';
+  socket.emit('join-room', room); showInfo('Entrando na sala '+room+'...');
+};
+document.getElementById('btnMute').onclick=()=>{
+  muted=!muted; document.getElementById('muteLabel').textContent=muted?'Com som':'Mudo';
+  if(stream) stream.getAudioTracks().forEach(t=>t.enabled=!muted);
+  if(video) video.muted=muted;
+};
+document.getElementById('btnFull').onclick=()=>{ if(document.fullscreenElement) document.exitFullscreen(); else document.querySelector('.video-wrap').requestFullscreen(); };
+document.getElementById('btnShare').onclick=async()=>{ if(!room){showInfo('Crie uma sala primeiro clicando em Transmitir');return;} try{await navigator.clipboard.writeText(room); showInfo('Código copiado: '+room);}catch(e){showInfo('Código: '+room);} };
+document.getElementById('btnStop').onclick=()=>{ if(stream) stream.getTracks().forEach(t=>t.stop()); if(pc) pc.close(); location.reload(); };
+// Socket / WebRTC basico
+socket.on('viewer-joined', async(viewerId)=>{
+  if(!isHost||!stream) return;
+  pc=new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});
+  stream.getTracks().forEach(t=>pc.addTrack(t,stream));
+  pc.onicecandidate=e=>{ if(e.candidate) socket.emit('ice-candidate',{to:viewerId,candidate:e.candidate}); };
+  const offer=await pc.createOffer(); await pc.setLocalDescription(offer);
+  socket.emit('offer',{to:viewerId,offer});
+});
+socket.on('offer', async({from,offer})=>{
+  pc=new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});
+  pc.ontrack=e=>{ video.srcObject=e.streams[0]; placeholder.style.display='none'; };
+  pc.onicecandidate=e=>{ if(e.candidate) socket.emit('ice-candidate',{to:from,candidate:e.candidate}); };
+  await pc.setRemoteDescription(offer); const ans=await pc.createAnswer(); await pc.setLocalDescription(ans);
+  socket.emit('answer',{to:from,answer:ans});
+});
+socket.on('answer', async({answer})=>{ if(pc) await pc.setRemoteDescription(answer); });
+socket.on('ice-candidate', async({candidate})=>{ if(pc&&candidate) await pc.addIceCandidate(candidate); });
+socket.on('viewers', n=>{ document.getElementById('viewers').textContent=n; });
+socket.on('room-not-found', ()=> showInfo('Sala não encontrada. Confira o código.'));
+// FPS simples
+let last=0, frames=0; setInterval(()=>{ document.getElementById('fps').textContent = frames>0? Math.min(frames,30):'--'; frames=0; },1000);
+video.addEventListener('timeupdate', ()=>{ frames++; });
+</script>
+</body>
+</html>

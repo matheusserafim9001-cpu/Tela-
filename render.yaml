@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: serafim-transmissoes
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: TURN_URL
+        sync: false
+      - key: TURN_USERNAME
+        sync: false
+      - key: TURN_CREDENTIAL
+        sync: false
