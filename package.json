@@ -1,0 +1,16 @@
+{
+  "name": "serafim-transmissoes",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Transmissao de tela para jogos com WebRTC e Socket.IO",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "express": "^4.21.2",
+    "socket.io": "^4.8.1"
+  }
+}
