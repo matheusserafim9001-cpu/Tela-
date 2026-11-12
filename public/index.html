@@ -57,11 +57,25 @@ small{color:#94a3b8}
 <button id="btnShare">🔗<br>Compartilhar</button>
 </div>
 
-<div class="panel" id="hostPanel">Sua sala foi criada!<div class="code" id="roomCode">------</div><small>Mande esse código para seus amigos</small><br><br><button id="btnStop">Encerrar transmissão</button></div>
+<div class="panel" id="hostPanel">Sua sala foi criada!<div class="code" id="roomCode">------</div><small>Mande o link ou o código para seus amigos - quem clicar no link entra direto!</small><br><br><button id="btnStop">Encerrar transmissão</button></div>
 <div class="panel" id="watchPanel"><p>Digite o código da sala</p><br><input id="codeInput" maxlength="6" placeholder="ABC123"><br><br><button id="btnJoin" class="primary">Entrar para assistir</button></div>
 <div class="panel" id="infoPanel"><span id="infoText"></span></div>
 </div>
-<script src="/socket.io/socket.io.js"></script>
+<script src="/socket.io/socket.io.js">
+// AUTO-ENTRAR PELO LINK ?room=XXXXXX
+(function(){
+  const params = new URLSearchParams(location.search);
+  const r = params.get('room');
+  if(r && r.length===6){
+    document.getElementById('watchPanel').classList.add('show');
+    document.getElementById('codeInput').value = r.toUpperCase();
+    showInfo('Você entrou pelo link! Clique em Entrar para assistir na sala '+r.toUpperCase());
+    // entra automatico apos 600ms
+    setTimeout(()=>{ document.getElementById('btnJoin').click(); }, 600);
+  }
+})();
+
+</script>
 <script>
 const socket = io();
 const video = document.getElementById('video');
@@ -96,7 +110,14 @@ document.getElementById('btnMute').onclick=()=>{
   if(video) video.muted=muted;
 };
 document.getElementById('btnFull').onclick=()=>{ if(document.fullscreenElement) document.exitFullscreen(); else document.querySelector('.video-wrap').requestFullscreen(); };
-document.getElementById('btnShare').onclick=async()=>{ if(!room){showInfo('Crie uma sala primeiro clicando em Transmitir');return;} try{await navigator.clipboard.writeText(room); showInfo('Código copiado: '+room);}catch(e){showInfo('Código: '+room);} };
+document.getElementById('btnShare').onclick=async()=>{
+  if(!room){showInfo('Crie uma sala primeiro clicando em Transmitir');return;}
+  const link = location.origin + '/?room=' + room;
+  try{await navigator.clipboard.writeText(link); showInfo('Link copiado! Manda pro seu amigo: '+link);}catch(e){ prompt('Copie o link da sala:', link); }
+  document.getElementById('infoPanel').classList.add('show');
+  // mostra link grande para copiar na mao tambem
+  document.getElementById('infoText').innerHTML = 'Link da sala: <b>'+link+'</b><br><small>Clique no link que seu amigo entra direto, sem digitar codigo</small>';
+};
 document.getElementById('btnStop').onclick=()=>{ if(stream) stream.getTracks().forEach(t=>t.stop()); if(pc) pc.close(); location.reload(); };
 // Socket / WebRTC basico
 socket.on('viewer-joined', async(viewerId)=>{
@@ -121,6 +142,20 @@ socket.on('room-not-found', ()=> showInfo('Sala não encontrada. Confira o códi
 // FPS simples
 let last=0, frames=0; setInterval(()=>{ document.getElementById('fps').textContent = frames>0? Math.min(frames,30):'--'; frames=0; },1000);
 video.addEventListener('timeupdate', ()=>{ frames++; });
+
+// AUTO-ENTRAR PELO LINK ?room=XXXXXX
+(function(){
+  const params = new URLSearchParams(location.search);
+  const r = params.get('room');
+  if(r && r.length===6){
+    document.getElementById('watchPanel').classList.add('show');
+    document.getElementById('codeInput').value = r.toUpperCase();
+    showInfo('Você entrou pelo link! Clique em Entrar para assistir na sala '+r.toUpperCase());
+    // entra automatico apos 600ms
+    setTimeout(()=>{ document.getElementById('btnJoin').click(); }, 600);
+  }
+})();
+
 </script>
 </body>
 </html>
